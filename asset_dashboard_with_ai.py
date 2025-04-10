@@ -173,6 +173,61 @@ with st.form("add_asset_form"):
         else:
             st.error("⚠️ الرجاء تعبئة جميع الحقول الإلزامية.")
 
+
+# ====== تصدير PDF ======
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
+from reportlab.lib.units import mm
+from reportlab.lib.utils import ImageReader
+import io
+
+st.markdown("---")
+st.subheader("🖨️ تصدير النتائج إلى PDF")
+
+if st.button("📄 إنشاء تقرير PDF"):
+    pdf_buffer = io.BytesIO()
+    c = canvas.Canvas(pdf_buffer, pagesize=A4)
+    width, height = A4
+
+    try:
+        logo = ImageReader("Logo-04.png")
+        c.drawImage(logo, x=80, y=height - 100, width=50*mm, height=30*mm, mask='auto')
+    except:
+        pass
+
+    c.setFont("Helvetica-Bold", 16)
+    c.drawCentredString(width / 2, height - 120, "تقرير الأصول")
+
+    c.setFont("Helvetica", 9)
+    x_offset = 30
+    y_offset = height - 140
+    row_height = 15
+    max_rows = 30
+    row_count = 0
+
+    display_cols = ["اسم الجهة", "المدينة", "الوصف بالعربي", "التكلفة", "القيمة الدفترية", "العمر المتبقي"]
+    filtered_display_df = filtered_df[display_cols].fillna("")
+
+    for index, row in filtered_display_df.iterrows():
+        if row_count >= max_rows:
+            c.showPage()
+            y_offset = height - 50
+            row_count = 0
+        y = y_offset - row_height * row_count
+        line = f"{row['اسم الجهة']} | {row['المدينة']} | {row['الوصف بالعربي']} | {row['التكلفة']} | {row['القيمة الدفترية']} | {row['العمر المتبقي']}"
+        c.drawString(x_offset, y, line)
+        row_count += 1
+
+    c.save()
+    pdf_buffer.seek(0)
+
+    st.download_button(
+        label="⬇️ تحميل تقرير PDF",
+        data=pdf_buffer,
+        file_name="تقرير_الأصول.pdf",
+        mime="application/pdf"
+    )
+
 # ====== عرض البيانات وحفظ ======
 st.markdown("---")
 st.subheader("🗂️ بيانات الأصول (بعد التصفية)")
