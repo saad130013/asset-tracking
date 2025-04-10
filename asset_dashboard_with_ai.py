@@ -1,6 +1,7 @@
 
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="لوحة متابعة الأصول", layout="wide")
 
@@ -79,6 +80,32 @@ if "المدينة" in filtered_df.columns:
     city_count = filtered_df["المدينة"].value_counts().reset_index()
     city_count.columns = ["المدينة", "عدد الأصول"]
     st.dataframe(city_count)
+
+
+# ====== رسومات بيانية ======
+st.markdown("---")
+st.subheader("📊 رسومات بيانية")
+
+# توزيع حسب تصنيف الأصل - المستوى الأول
+if "وصف تصنيف الأصول المستوى الأول - عربي" in filtered_df.columns:
+    st.markdown("#### 🔹 توزيع الأصول حسب التصنيف (المستوى الأول)")
+    class1_counts = filtered_df["وصف تصنيف الأصول المستوى الأول - عربي"].value_counts()
+    fig1, ax1 = plt.subplots()
+    class1_counts.plot(kind='barh', ax=ax1)
+    ax1.set_xlabel("عدد الأصول")
+    ax1.set_ylabel("تصنيف الأصل")
+    ax1.invert_yaxis()
+    st.pyplot(fig1)
+
+# توزيع حسب التكلفة
+if "التكلفة" in filtered_df.columns:
+    st.markdown("#### 🔹 توزيع الأصول حسب التكلفة")
+    top_costs = filtered_df.groupby("الوصف بالعربي")["التكلفة"].sum().sort_values(ascending=False).head(10)
+    fig2, ax2 = plt.subplots()
+    top_costs.plot(kind='bar', ax=ax2)
+    ax2.set_ylabel("إجمالي التكلفة")
+    ax2.set_xlabel("نوع الأصل")
+    st.pyplot(fig2)
 
 # ====== عرض كامل للبيانات ======
 st.subheader("🗂️ بيانات الأصول (بعد التصفية)")
