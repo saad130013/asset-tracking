@@ -1,54 +1,57 @@
+[![Build](https://github.com/aliftype/amiri/actions/workflows/build.yml/badge.svg)](https://github.com/aliftype/amiri/actions/workflows/build.yml)
 
-# 📊 Asset Tracking Dashboard (لوحة تتبع الأصول)
+Amiri
+=====
 
-لوحة تفاعلية مبنية باستخدام [Streamlit](https://streamlit.io/) لتحليل وتتبع بيانات الأصول الحكومية أو المؤسسية بطريقة سهلة وبواجهة عربية بالكامل.
+Amiri (أميري) is a classical Arabic typeface in Naskh style for typesetting books and
+other running text.
 
----
+Amiri is a revival of the beautiful typeface pioneered in early 20th century by
+[Bulaq Press][1] in Cairo, also known as Amiria Press, after which the font is
+named.
 
-## ✅ المميزات
+The uniqueness of this typeface comes from its superb balance between the
+beauty of Naskh calligraphy on one hand, the constraints and requirements of
+elegant typography on the other. Also, it is one of the few metal typefaces
+that were used in typesetting the Koran, making it a good source for a digital
+typeface to be used in typesetting Koranic verses.
 
-- عرض إجمالي صافي القيمة الدفترية، والقيمة المتبقية، والتكلفة الأصلية.
-- توزيع الأصول حسب المدينة.
-- جدول تفصيلي لبيانات جميع الأصول.
-- يدعم اللغة العربية بشكل كامل.
-- قراءة ذكية للبيانات حتى لو كانت تحتوي على قيم غير رقمية أو مفقودة.
+Amiri project aims at the revival of the aesthetics and traditions of Arabic
+typesetting, and adapting it to the era of digital typesetting, in a publicly
+available form.
 
----
+Amiri is a free and open source project that everyone is encouraged to use and
+modify. Amiri is available under the terms of [Open Font License][2], see the
+included license file for more details.
 
-## 🗂️ محتويات المشروع
+Latest version of the Amiri font can be obtained from its web site:
 
-| الملف | الوصف |
-|------|--------|
-| `asset_dashboard_with_ai.py` | سكربت Streamlit لتشغيل لوحة التحكم |
-| `asstv2.xlsx` | ملف بيانات الأصول بصيغة Excel |
-| `requirements.txt` | ملف تثبيت المتطلبات |
+> https://aliftype.com/amiri
 
----
+Development status
+------------------
 
-## 🚀 طريقة التشغيل
+Amiri was actively developed between 2008–2022, when version 1 was released and
+it was then considered mature enough that not further development is planned.
+No typeface is ever complete, but maintaining Amiri is increasingly time and
+effort-consuming due to a combination of decisions taken early on due to
+software limitations at the time its development started, as well as extensive
+character and glyph coverage. Amiri development might be restarted in the
+future under a different name with less backward-compatibility constraints, but
+nothing concrete is currently planed.
 
-1. تأكد من تثبيت Python 3.9 أو أعلى.
-2. ثبّت المتطلبات:
+Building
+--------
 
-```bash
-pip install -r requirements.txt
-```
+To build the fonts you need a few Python packages:
 
-3. شغّل التطبيق:
+    $ python -m venv amiri
+    $ . amiri/bin/activate
+    $ pip install -r requirements.txt
 
-```bash
-streamlit run asset_dashboard_with_ai.py
-```
+To build the font files run:
 
----
+    $ make ttf
 
-## 📝 ملاحظات
-
-- تأكد أن ملف Excel بصيغة صحيحة، ويبدأ من الصف الثالث حيث توجد رؤوس الأعمدة.
-- يمكن تعديل الأعمدة المالية في السكربت حسب هيكلة بياناتك.
-
----
-
-## 📬 تواصل
-
-لأي استفسار أو تطوير إضافي، لا تتردد في التواصل.
+[1]: https://www.bibalex.org/bulaqpress/en/bulaq.htm "The Bulaq Press"
+[2]: https://openfontlicense.org "The Open Font License"
