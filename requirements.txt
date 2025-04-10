@@ -13,3 +13,6 @@ python-docx
 tabulate
 arabic_reshaper
 python-bidi
+
+folium
+streamlit-folium
