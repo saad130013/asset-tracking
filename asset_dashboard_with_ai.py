@@ -1,112 +1,144 @@
 
+# -*- coding: utf-8 -*-
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
 
+# إعداد الصفحة
 st.set_page_config(page_title="لوحة متابعة الأصول", layout="wide")
+st.markdown("<h1 style='text-align: right;'>لوحة متابعة الأصول - التصنيف الذكي</h1>", unsafe_allow_html=True)
 
+# تحميل البيانات
 @st.cache_data
 def load_data():
-    df = pd.read_excel("asstv2.xlsx", skiprows=2)
+    file_path = "asset_data_with_prediction.xlsx"
+    df = pd.read_excel(file_path)
+    df[['lat', 'lon']] = df['الإحداثيات'].str.split(',', expand=True)
+    df['lat'] = pd.to_numeric(df['lat'], errors='coerce')
+    df['lon'] = pd.to_numeric(df['lon'], errors='coerce')
     return df
 
 df = load_data()
 
-# تحويل الأعمدة المالية إلى أرقام
-columns_to_convert = [
-    "القيمة الدفترية", "القيمة المتبقية في نهاية العمر", "الاستهلاك المتراكم",
-    "قسط الاهلاك", "التكلفة", "العمر الإنتاجي", "العمر المتبقي"
-]
-
-for col in columns_to_convert:
-    if col in df.columns:
-        df[col] = pd.to_numeric(df[col], errors="coerce")
-
-st.title("📊 لوحة متابعة الأصول")
-
-# ====== الفلاتر التفاعلية ======
-st.sidebar.header("🎛️ فلاتر البحث")
-
-selected_entity = st.sidebar.multiselect("اسم الجهة", options=df["اسم الجهة"].dropna().unique())
-selected_city = st.sidebar.multiselect("المدينة", options=df["المدينة"].dropna().unique())
-selected_type = st.sidebar.multiselect("الوصف بالعربي", options=df["الوصف بالعربي"].dropna().unique())
-
-
-selected_class_1 = st.sidebar.multiselect(
-    "تصنيف الأصل - المستوى الأول",
-    options=df["وصف تصنيف الأصول المستوى الأول - عربي"].dropna().unique()
-)
-
-selected_class_2 = st.sidebar.multiselect(
-    "تصنيف الأصل - المستوى الثاني",
-    options=df["وصف تصنيف الأصول المستوى الثاني - عربي"].dropna().unique()
-)
-
-selected_class_3 = st.sidebar.multiselect(
-    "تصنيف الأصل - المستوى الثالث",
-    options=df["وصف تصنيف الأصول المستوى الثالث - عربي"].dropna().unique()
-)
-
-filtered_df = df.copy()
-if selected_entity:
-    filtered_df = filtered_df[filtered_df["اسم الجهة"].isin(selected_entity)]
-if selected_city:
-    filtered_df = filtered_df[filtered_df["المدينة"].isin(selected_city)]
-if selected_type:
-    filtered_df = filtered_df[filtered_df["الوصف بالعربي"].isin(selected_type)]
-
-
-if selected_class_1:
-    filtered_df = filtered_df[filtered_df["وصف تصنيف الأصول المستوى الأول - عربي"].isin(selected_class_1)]
-
-if selected_class_2:
-    filtered_df = filtered_df[filtered_df["وصف تصنيف الأصول المستوى الثاني - عربي"].isin(selected_class_2)]
-
-if selected_class_3:
-    filtered_df = filtered_df[filtered_df["وصف تصنيف الأصول المستوى الثالث - عربي"].isin(selected_class_3)]
-
-# ====== المؤشرات الرئيسية ======
-col1, col2, col3 = st.columns(3)
-
-col1.metric("📘 صافي القيمة الدفترية", f"{filtered_df['القيمة الدفترية'].sum():,.0f} ريال")
-col2.metric("💰 القيمة المتبقية", f"{filtered_df['القيمة المتبقية في نهاية العمر'].sum():,.0f} ريال")
-col3.metric("📦 إجمالي التكلفة", f"{filtered_df['التكلفة'].sum():,.0f} ريال")
+# إحصائيات
+col1, col2, col3, col4 = st.columns(4)
+col1.metric("عدد الأصول", len(df))
+col2.metric("التكلفة الأصلية", f"{df['التكلفة الأصلية'].sum():,.0f} ريال")
+col3.metric("القيمة الدفترية", f"{df['القيمة الدفترية'].sum():,.0f} ريال")
+col4.metric("الأصول بتصنيف مختلف", (df['التصنيف المتوقع (ذكاء صناعي)'] != df['التصنيف الفعلي']).sum())
 
 st.markdown("---")
 
-# ====== توزيع حسب المدينة ======
-st.subheader("📍 توزيع الأصول حسب المدينة")
-if "المدينة" in filtered_df.columns:
-    city_count = filtered_df["المدينة"].value_counts().reset_index()
-    city_count.columns = ["المدينة", "عدد الأصول"]
-    st.dataframe(city_count)
+# خريطة تفاعلية
+st.markdown("### خريطة الأصول")
+st.map(df[['lat', 'lon']].dropna())
 
+# مربع البحث
+search_term = st.text_input("ابحث عن أصل (النوع، المدينة، التصنيف...):", key="search")
 
-# ====== رسومات بيانية ======
+if search_term:
+    df = df[df.apply(lambda row: search_term.lower() in str(row.values).lower(), axis=1)]
+
+# فلاتر متقدمة
+with st.expander("فلاتر"):
+    region_filter = st.multiselect("المنطقة:", df['المنطقة'].dropna().unique())
+    if region_filter:
+        df = df[df['المنطقة'].isin(region_filter)]
+
+    mismatch_only = st.checkbox("عرض الأصول ذات التصنيف المختلف فقط")
+    if mismatch_only:
+        df = df[df['التصنيف المتوقع (ذكاء صناعي)'] != df['التصنيف الفعلي']]
+
+# عرض الجدول
+st.markdown("### تفاصيل الأصول مع التصنيف الذكي")
+st.dataframe(df.drop(columns=['lat', 'lon']).style.format(thousands=","), use_container_width=True)
+# ====== تصدير النتائج ======
 st.markdown("---")
-st.subheader("📊 رسومات بيانية")
+st.subheader("📤 تصدير النتائج")
 
-# توزيع حسب تصنيف الأصل - المستوى الأول
-if "وصف تصنيف الأصول المستوى الأول - عربي" in filtered_df.columns:
-    st.markdown("#### 🔹 توزيع الأصول حسب التصنيف (المستوى الأول)")
-    class1_counts = filtered_df["وصف تصنيف الأصول المستوى الأول - عربي"].value_counts()
-    fig1, ax1 = plt.subplots()
-    class1_counts.plot(kind='barh', ax=ax1)
-    ax1.set_xlabel("عدد الأصول")
-    ax1.set_ylabel("تصنيف الأصل")
-    ax1.invert_yaxis()
-    st.pyplot(fig1)
+col_export1, col_export2 = st.columns(2)
 
-# توزيع حسب التكلفة
-if "التكلفة" in filtered_df.columns:
-    st.markdown("#### 🔹 توزيع الأصول حسب التكلفة")
-    top_costs = filtered_df.groupby("الوصف بالعربي")["التكلفة"].sum().sort_values(ascending=False).head(10)
-    fig2, ax2 = plt.subplots()
-    top_costs.plot(kind='bar', ax=ax2)
-    ax2.set_ylabel("إجمالي التكلفة")
-    ax2.set_xlabel("نوع الأصل")
-    st.pyplot(fig2)
+with col_export1:
+    excel_filename = "البيانات_المفلترة.xlsx"
+    excel_data = filtered_df.to_excel(excel_filename, index=False)
+    with open(excel_filename, "rb") as file:
+        st.download_button(
+            label="📥 تحميل البيانات كـ Excel",
+            data=file,
+            file_name=excel_filename,
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
-# ====== عرض كامل للبيانات ======
-st.subheader("🗂️ بيانات الأصول (بعد التصفية)")
-st.dataframe(filtered_df)
+with col_export2:
+    st.info("🚧 تصدير إلى PDF سيتم إضافته قريبًا...")
+
+
+# ====== إضافة أصل جديد ======
+st.markdown("---")
+st.subheader("➕ إضافة أصل جديد")
+
+with st.form("add_asset_form"):
+    col1, col2 = st.columns(2)
+
+    with col1:
+        level1_code = st.text_input("Level 1 FA Module Code")
+        level1_desc_ar = st.text_input("Level 1 FA Module - Arabic Description")
+        level1_desc_en = st.text_input("Level 1 FA Module - English Description")
+        level2_code = st.text_input("Level 2 FA Module Code")
+        level2_desc_ar = st.text_input("Level 2 FA Module - Arabic Description")
+        level2_desc_en = st.text_input("Level 2 FA Module - English Description")
+        level3_code = st.text_input("Level 3 FA Module Code")
+        level3_desc_ar = st.text_input("Level 3 FA Module - Arabic Description")
+        cost = st.number_input("Cost", min_value=0.0, step=1.0)
+        depreciation = st.number_input("Depreciation amount", min_value=0.0, step=1.0)
+
+    with col2:
+        useful_life = st.number_input("Useful Life (بالسنوات)", min_value=0.0, step=1.0)
+        remaining_life = st.number_input("Remaining Useful Life", min_value=0.0, step=1.0)
+        country = st.text_input("Country")
+        region = st.text_input("Region")
+        city = st.text_input("City")
+        coordinates = st.text_input("Geographical Coordinates")
+        address_id = st.text_input("National Address ID")
+        building_number = st.text_input("Building Number")
+        floor_number = st.text_input("Floors Number")
+        room_number = st.text_input("Room/office Number")
+
+    submitted = st.form_submit_button("📩 تسجيل الأصل")
+
+    if submitted:
+        required_fields = [
+            level1_code, level1_desc_ar, level2_code, level2_desc_ar,
+            cost, useful_life, remaining_life, country, region, city
+        ]
+
+        if all(required_fields):
+            new_row = {
+                "Level 1 FA Module Code": level1_code,
+                "Level 1 FA Module - Arabic Description": level1_desc_ar,
+                "Level 1 FA Module - English Description": level1_desc_en,
+                "Level 2 FA Module Code": level2_code,
+                "Level 2 FA Module - Arabic Description": level2_desc_ar,
+                "Level 2 FA Module - English Description": level2_desc_en,
+                "Level 3 FA Module Code": level3_code,
+                "Level 3 FA Module - Arabic Description": level3_desc_ar,
+                "Cost": cost,
+                "Depreciation amount": depreciation,
+                "Useful Life": useful_life,
+                "Remaining useful life": remaining_life,
+                "Country": country,
+                "Region": region,
+                "City": city,
+                "Geographical Coordinates": coordinates,
+                "National Address ID": address_id,
+                "Building Number": building_number,
+                "Floors Number": floor_number,
+                "Room/office Number": room_number
+            }
+
+            new_row_df = pd.DataFrame([new_row])
+            df = pd.concat([df, new_row_df], ignore_index=True)
+            st.success("✅ تم تسجيل الأصل بنجاح وتمت إضافته إلى الجدول.")
+        else:
+            st.error("⚠️ الرجاء تعبئة جميع الحقول الإلزامية (مثل: التصنيف، التكلفة، الموقع...)")
+
+
