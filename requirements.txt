@@ -2,3 +2,12 @@ pandas
 streamlit
 openpyxl
 matplotlib
+reportlab
+scikit-learn
+numpy
+plotly
+seaborn
+xlsxwriter
+pdfplumber
+python-docx
+tabulate
