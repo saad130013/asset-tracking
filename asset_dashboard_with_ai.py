@@ -1,10 +1,20 @@
 
-# -*- coding: utf-8 -*-
 
+
+
+
+import streamlit as st
+import pandas as pd
+
+
+
+
+
+st.set_page_config(page_title="لوحة متابعة الأصول", layout="wide")
+# -*- coding: utf-8 -*-
 # ====== حفظ الأصول المضافة ======
 st.markdown("---")
 st.subheader("💾 حفظ البيانات بعد الإضافة")
-
 save_excel_filename = "البيانات_بعد_الإضافة.xlsx"
 excel_buffer = df.to_excel(save_excel_filename, index=False)
 with open(save_excel_filename, "rb") as file:
@@ -14,13 +24,7 @@ with open(save_excel_filename, "rb") as file:
         file_name=save_excel_filename,
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-
-
-import streamlit as st
-import pandas as pd
-
 # إعداد الصفحة
-
 # ====== تنسيق الواجهة ======
 custom_css = """
 <style>
@@ -50,8 +54,6 @@ custom_css = """
 </style>
 """
 st.markdown(custom_css, unsafe_allow_html=True)
-
-
 # ====== شعار الجهة ======
 st.markdown(
     """
@@ -62,8 +64,6 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
-st.set_page_config(page_title="لوحة متابعة الأصول", layout="wide")
 st.markdown("<h1 style='text-align: right;'>لوحة متابعة الأصول - التصنيف الذكي</h1>", unsafe_allow_html=True)
 
 # تحميل البيانات
