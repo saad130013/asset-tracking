@@ -11,3 +11,5 @@ xlsxwriter
 pdfplumber
 python-docx
 tabulate
+arabic_reshaper
+python-bidi
